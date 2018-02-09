@@ -28,7 +28,7 @@ cd iosxe-dev-env
 ### Step 3 - Create Virtualenv and Install Python Requirements
 
 ``` 
-virtualenv env
+virtualenv venv
 
 source venv/bin/activate
 
