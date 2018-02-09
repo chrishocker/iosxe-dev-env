@@ -44,7 +44,7 @@ vagrant up
 ### Step 5 - Run Ansible Playbook
 
 ```
-ansible-playbook ansible-provision.yaml
+ansible-playbook ansible_provision.yaml
 ```
 
 Note: The last 2 tasks that enable guestshell and git will error out, but they should complete successfully.
