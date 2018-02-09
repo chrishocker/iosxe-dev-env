@@ -2,10 +2,10 @@
 
 ## Prereqs
 * OS-X
-* Python 2.7 (preferrably separate from OS X system python)
-* Virtualenv
-* Vagrant
-* Virtualbox
+* Python 2.7 (preferrably separate from OS X system python; brew install python)
+* Virtualenv (pip2 install virtualenv)
+* Vagrant (brew cask install virtualbox)
+* Virtualbox (brew cask install vagrant)
 
 ## Procedure
 
