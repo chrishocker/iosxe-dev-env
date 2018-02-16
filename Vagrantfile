@@ -10,9 +10,9 @@ Vagrant.configure("2") do |config|
   config.vm.network :private_network, virtualbox__intnet: "link1", auto_config: false
   config.vm.network :private_network, virtualbox__intnet: "link2", auto_config: false
 
-#  config.vm.provision "ansible" do |ansible|
-#    ansible.playbook = "ansible/playbooks/ansible_provision.yaml"
-#    ansible.inventory_path = "./ansible/hosts"
-#  end
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible_provision.yaml"
+    ansible.inventory_path = "hosts"
+  end
 
 end

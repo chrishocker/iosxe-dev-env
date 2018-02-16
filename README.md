@@ -41,15 +41,9 @@ pip install -r requirements.txt
 vagrant up
 ```
 
-### Step 5 - Run Ansible Playbook
+The Vagrantfile is configured to run an Ansible playbook to automatically setup the IOS-XE virtual machine and enable guestshell. The last 2 tasks that enable guestshell and install git will error out, but they should complete successfully.
 
-```
-ansible-playbook ansible_provision.yaml
-```
-
-Note: The last 2 tasks that enable guestshell and git will error out, but they should complete successfully.
-
-### Step 6 - Verify
+### Step 5 - Verify
 
 ```
 vagrant ssh

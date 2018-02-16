@@ -13,95 +13,84 @@
   hosts: all
   connection: local
   gather_facts: false
+  vars_files: 
+    - secrets.yaml
 
   tasks:
-    - name: Configure NETCONF and RESTCONF
-      ios_config:
-        provider:
-          host: "{{mgmt_ip}}"
-          port: "{{ssh_port}}"
-          username: "{{username}}"
-          password: "{{password}}"
-        lines:
-          - netconf-yang
-          - netconf-yang cisco-odm polling-enable
-          - restconf
-          - ip http server
-          - ip http secure-server
 
     - name: Enable IOX
       ios_config:
-        provider:
-          host: "{{mgmt_ip}}"
-          port: "{{ssh_port}}"
-          username: "{{username}}"
-          password: "{{password}}"
+        provider: "{{ provider }}"
         lines:
           - iox
 
-    - name: Pause for NETCONF and IOX to start
-      pause:
-        seconds: 45
+ #   - name: Pause for IOX to start
+ #     pause:
+ #       seconds: 45
 
-#    Ansible 2.4 version of the NETCONF module supports reading in NETCONF Files
-    - name: "Generate NETCONF config"
-      with_items: "{{interfaces}}"
-      template:
-        src: "netconf_interface_template.j2"
-        dest: "./{{inventory_hostname}}-{{item.interface_type}}{{item.interface_id}}.xml"
-
-    - name: Configure Interfaces
-      with_items: "{{interfaces}}"
-      netconf_config:
-        host: "{{mgmt_ip}}"
-        port: "{{netconf_port}}"
-        hostkey_verify: false
-        username: "{{username}}"
-        password: "{{password}}"
-        src: "./{{inventory_hostname}}-{{item.interface_type}}{{item.interface_id}}.xml"
-
-    - name: Configure Interfaces and NAT for Guest Shell
-      netconf_config:
-        host: "{{mgmt_ip}}"
-        port: "{{netconf_port}}"
-        hostkey_verify: false
-        username: "{{username}}"
-        password: "{{password}}"
-        src: "guestshell_prep_template.xml"
-      tags: guestshell
-
-    - name: Configure NAT for Guestshell Flask App
+    - name: Configure GigabitEthernet1
       ios_config:
-        provider:
-          host: "{{mgmt_ip}}"
-          port: "{{ssh_port}}"
-          username: "{{username}}"
-          password: "{{password}}"
+        provider: "{{ provider }}"
         lines:
+          - description Configured by Ansible with Vagrant
+          - ip address dhcp
+          - ip nat outside
+        parents: interface GigabitEthernet1
+
+    - name: Enable GigabitEthernet1
+      ios_interface:
+        provider: "{{ provider }}"
+        name: GigabitEthernet1
+        enabled: True
+
+    - name: Configure GigabitEthernet2
+      ios_config:
+        provider: "{{ provider }}"
+        lines:
+          - description Configured by Ansible with Vagrant
+          - ip address 192.168.100.20 255.255.255.0
+        parents: interface GigabitEthernet2
+
+    - name: Enable GigabitEthernet2
+      ios_interface:
+        provider: "{{ provider }}"
+        name: GigabitEthernet2
+        enabled: True
+
+    - name: Configure VirtualPortGroup0
+      ios_config:
+        provider: "{{ provider }}"
+        lines:
+          - ip address 192.168.35.1 255.255.255.0
+          - ip nat inside
+        parents: interface VirtualPortGroup0
+
+    - name: Configure NAT Access-list
+      ios_config:
+        provider: "{{ provider }}"
+        lines:
+          - permit 192.168.0.0 0.0.255.255
+        parents: ip access-list standard NAT_ACL
+        before: no ip access-list standard NAT_ACL
+        match: exact
+
+    - name: Configure NAT Rules
+      ios_config:
+        provider: "{{ provider }}"
+        lines:
+          - ip nat inside source list NAT_ACL interface GigabitEthernet1 overload
           - ip nat inside source static tcp 192.168.35.2 5000 interface GigabitEthernet1 5000
 
     - name: Enable Guest Shell
       ignore_errors: true
       ios_command:
-        provider:
-          host: "{{mgmt_ip}}"
-          port: "{{ssh_port}}"
-          username: "{{username}}"
-          password: "{{password}}"
-          timeout: 60
+        provider: "{{ provider }}"
         commands:
           - guestshell enable VirtualPortGroup 0 guest-ip 192.168.35.2 name-server 208.67.222.222
-      tags: guestshell
 
     - name: Install Git
       ignore_errors: true
       ios_command:
-        provider:
-          host: "{{mgmt_ip}}"
-          port: "{{ssh_port}}"
-          username: "{{username}}"
-          password: "{{password}}"
-          timeout: 180
+        provider: "{{ provider }}"
         commands:
           - guestshell run sudo yum install git -y
-      tags: guestshell    
