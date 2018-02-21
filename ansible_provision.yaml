@@ -17,12 +17,13 @@
     - secrets.yaml
 
   tasks:
-
     - name: Enable IOX
+      retries: 2
+      delay: 5
       ios_config:
         provider: "{{ provider }}"
         lines:
-          - iox
+         - iox
 
  #   - name: Pause for IOX to start
  #     pause:
@@ -87,6 +88,9 @@
         provider: "{{ provider }}"
         commands:
           - guestshell enable VirtualPortGroup 0 guest-ip 192.168.35.2 name-server 208.67.222.222
+        wait_for:
+          - result[0] contains wait
+          - result[0] contains successfully
 
     - name: Install Git
       ignore_errors: true
