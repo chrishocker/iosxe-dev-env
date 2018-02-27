@@ -12,7 +12,13 @@
 - name: Provision IOS XE Devices
   hosts: all
   connection: local
-  gather_facts: false
+  vars: 
+    provider:
+      host: 127.0.0.1
+      port: 2222
+      username: vagrant
+      password: vagrant
+      timeout: 90
   vars_files: 
     - secrets.yaml
 
@@ -98,3 +104,43 @@
         provider: "{{ provider }}"
         commands:
           - guestshell run sudo yum install git -y
+
+    - name: Enable SCP server 
+      ios_config:
+        provider: "{{ provider }}"
+        lines:
+          - ip scp server enable
+
+    - name: Pause for SCP server to start
+      pause:
+        seconds: 5
+
+    - name: Copy guestshell requirements.txt
+      command: >
+        scp -i $HOME/.vagrant.d/insecure_private_key 
+        -P 2222
+        -o StrictHostKeyChecking=no
+        guestshell-requirements.txt
+        vagrant@127.0.0.1:/requirements.txt
+
+    - name: Install Python requirements
+      ios_command:
+        provider: "{{ provider }}"
+        commands:
+          - guestshell run sudo pip install -r /flash/requirements.txt
+
+    - name: Enable DNS and NTP
+      ios_config:
+        provider: "{{ provider }}"
+        lines:
+          - ip name-server 8.8.8.8
+          - ntp server us.pool.ntp.org
+
+    - name: Configure AWS credentials
+      ios_command:
+        provider: "{{ provider }}"
+        commands:
+          - guestshell run aws configure set aws_access_key_id {{ aws_access_key_id }}
+          - guestshell run aws configure set aws_secret_access_key {{ aws_secret_access_key }}
+          - guestshell run aws configure set region {{ aws_region }}
+
