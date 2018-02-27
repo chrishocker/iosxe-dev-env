@@ -35,7 +35,15 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4 - Vagrant Up
+### Step 4 - Create secrets.yaml file
+
+```
+aws_access_key_id: <access-key>
+aws_secret_access_key: <secret-access-key>
+aws_region: us-west-1
+```
+
+### Step 5 - Vagrant Up
 
 ```
 vagrant up
@@ -43,7 +51,7 @@ vagrant up
 
 The Vagrantfile is configured to run an Ansible playbook to automatically setup the IOS-XE virtual machine and enable guestshell. The last 2 tasks that enable guestshell and install git will error out, but they should complete successfully.
 
-### Step 5 - Verify
+### Step 6 - Verify
 
 ```
 vagrant ssh
