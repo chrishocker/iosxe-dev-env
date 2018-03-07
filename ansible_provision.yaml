@@ -18,11 +18,16 @@
       port: 2222
       username: vagrant
       password: vagrant
-      timeout: 90
+      timeout: 180
   vars_files: 
     - secrets.yaml
 
+
   tasks:
+    - name: Pause to let vagrant settle
+      pause:
+        seconds: 5
+
     - name: Enable IOX
       retries: 2
       delay: 5
@@ -89,21 +94,34 @@
           - ip nat inside source static tcp 192.168.35.2 5000 interface GigabitEthernet1 5000
 
     - name: Enable Guest Shell
-      ignore_errors: true
       ios_command:
         provider: "{{ provider }}"
         commands:
           - guestshell enable VirtualPortGroup 0 guest-ip 192.168.35.2 name-server 208.67.222.222
+        match: any
         wait_for:
-          - result[0] contains wait
-          - result[0] contains successfully
+          - result[0] contains 'Guestshell enabled successfully'
+          - result[0] contains 'guestshell is in RUNNING state'
+
+    - name: Update packages needed by git
+      ios_command:
+        provider: "{{ provider }}"
+        commands:
+          - guestshell run sudo yum update -y nss curl libcurl
+        match: any
+        wait_for:
+          - result[0] contains 'Complete!'
+          - result[0] contains 'Nothing to do'
 
     - name: Install Git
-      ignore_errors: true
       ios_command:
         provider: "{{ provider }}"
         commands:
           - guestshell run sudo yum install git -y
+        match: any
+        wait_for:
+          - result[0] contains 'Complete!'
+          - result[0] contains 'Nothing to do'
 
     - name: Enable SCP server 
       ios_config:
@@ -143,4 +161,3 @@
           - guestshell run aws configure set aws_access_key_id {{ aws_access_key_id }}
           - guestshell run aws configure set aws_secret_access_key {{ aws_secret_access_key }}
           - guestshell run aws configure set region {{ aws_region }}
-
